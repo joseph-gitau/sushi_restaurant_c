@@ -1,0 +1,68 @@
+char command;
+    char buffer[MAX_STRING_LENGTH];
+    char name[MAX_STRING_LENGTH];
+    enum plate_colour colour;
+    enum sushi_type type;
+    // execute the command untill user enters CTRL + D (EOF)
+    while (scanf_command(&command) != EOF) {
+        // get the command from user
+        printf("Enter command: ");
+        // read the rest of the line
+        fgets(buffer, MAX_STRING_LENGTH, stdin);
+        // interpret the line
+        interpret_line(buffer, name, &colour, &type);
+        // execute the command
+        if (command == COMMAND_ADD_TABLE) {
+            // add a table
+            // create a new table
+            struct table *new_table = malloc(sizeof(struct table));
+            // copy the name into the table
+            strcpy(new_table->customer, name);
+            // set the orders to NULL
+            new_table->orders = NULL;
+            // set the next to NULL
+            new_table->next = NULL;
+            // add the table to the restaurant
+            if (sushi_restaurant->tables == NULL) {
+                // if the restaurant is empty
+                sushi_restaurant->tables = new_table;
+            } else {
+                // if the restaurant is not empty
+                struct table *current = sushi_restaurant->tables;
+                while (current->next != NULL) {
+                    current = current->next;
+                }
+                current->next = new_table;
+            }
+        } else if (command == COMMAND_ADD_CUSTOMER) {
+            // add a customer
+            // create a new plate
+            struct plate *new_plate = malloc(sizeof(struct plate));
+            // copy the name into the plate
+            strcpy(new_plate->roll_name, name);
+            // set the colour
+            new_plate->colour = colour;
+            // set the type
+            new_plate->type = type;
+            // set the next to NULL
+            new_plate->next = NULL;
+            // add the plate to the restaurant
+            if (sushi_restaurant->plates == NULL) {
+                // if the restaurant is empty
+                sushi_restaurant->plates = new_plate;
+            } else {
+                // if the restaurant is not empty
+                struct plate *current = sushi_restaurant->plates;
+                while (current->next != NULL) {
+                    current = current->next;
+                }
+                current->next = new_plate;
+            }
+        } else if (command == COMMAND_PRINT_TABLES) {
+            // print all tables
+            // print the restaurant
+            print_restaurant(sushi_restaurant);
+        }
+        // print the prompt
+        printf("Enter command: ");
+    }
