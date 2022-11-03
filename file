@@ -66,3 +66,13 @@ char command;
         // print the prompt
         printf("Enter command: ");
     }
+
+    // place the users input into the `remaining_input` string
+    char remaining_input[MAX_STRING_LENGTH];
+    fgets(remaining_input, MAX_STRING_LENGTH, stdin);
+
+    char dish_name[MAX_STRING_LENGTH];
+    enum plate_colour colour;
+    enum sushi_type type;
+    // parse the users input into the variables above
+    interpret_line(remaining_input, dish_name, &colour, &type);

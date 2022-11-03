@@ -26,6 +26,19 @@
 #define COMMAND_ADD_CUSTOMER 'c'
 // print all tables
 #define COMMAND_PRINT_TABLES 'p'
+// add plate to sushi train
+#define COMMAND_ADD_PLATE 'r'
+// print train 't'
+#define COMMAND_PRINT_TRAIN 't'
+// order plate 'o'
+#define COMMAND_ADD_ORDER 'o'
+// calculate bill 'b'
+#define COMMAND_CALCULATE_BILL 'b'
+// close restautant 'q'
+#define COMMAND_CLOSE_RESTAURANT 'q'
+// reverse train 's'
+#define COMMAND_REVERSE_TRAIN 's'
+
 // TODO: you may choose to add additional #defines here.
 
 // Provided Enums
@@ -147,7 +160,6 @@ int main(void)
             new_table->orders = NULL;
             new_table->next = sushi_restaurant->tables;
             sushi_restaurant->tables = new_table;
-            
         }
         else if (command == COMMAND_ADD_CUSTOMER)
         {
@@ -172,12 +184,185 @@ int main(void)
             new_table->orders = new_plate;
             new_table->next = sushi_restaurant->tables;
             sushi_restaurant->tables = new_table;
-                }
+        }
         else if (command == COMMAND_PRINT_TABLES)
         {
             // print tables
             print_restaurant(sushi_restaurant);
         }
+        // add plates using COMMAND_ADD_PLATE
+        else if (command == COMMAND_ADD_PLATE)
+        {
+            // place the users input into the `remaining_input` string
+            char remaining_input[MAX_STRING_LENGTH];
+            fgets(remaining_input, MAX_STRING_LENGTH, stdin);
+
+            char dish_name[MAX_STRING_LENGTH];
+            enum plate_colour colour;
+            enum sushi_type type;
+            // parse the users input into the variables above
+            interpret_line(remaining_input, dish_name, &colour, &type);
+            // add to plates
+            struct plate *new_plate = malloc(sizeof(struct plate));
+            strcpy(new_plate->roll_name, dish_name);
+            new_plate->colour = colour;
+            new_plate->type = type;
+            new_plate->next = sushi_restaurant->plates;
+            sushi_restaurant->plates = new_plate;
+        }
+        // print train using COMMAND_PRINT_TRAIN
+        else if (command == COMMAND_PRINT_TRAIN)
+        {
+            // print train
+            struct plate *current_plate = sushi_restaurant->plates;
+            while (current_plate != NULL)
+            {
+                printf("%s %c %d \n", current_plate->roll_name,
+                       color_to_char(current_plate->colour),
+                       current_plate->type);
+                current_plate = current_plate->next;
+            }
+            // if there are no plates, print "EMPTY"
+            if (sushi_restaurant->plates == NULL)
+            {
+                printf("EMPTY :( \n");
+            }
+        }
+        // add order using COMMAND_ADD_ORDER
+        else if (command == COMMAND_ADD_ORDER)
+        {
+            // place the users input into the `remaining_input` string
+            char remaining_input[MAX_STRING_LENGTH];
+            fgets(remaining_input, MAX_STRING_LENGTH, stdin);
+
+            char customer_name[MAX_STRING_LENGTH];
+            char dish_name[MAX_STRING_LENGTH];
+            // parse the users input into the variables above
+            interpret_order(remaining_input, customer_name, dish_name);
+            // check if customer exists
+            struct table *current_table = sushi_restaurant->tables;
+            while (current_table != NULL)
+            {
+                if (strcmp(current_table->customer, customer_name) == 0)
+                {
+                    // add order to customer
+                    // check if plate exists
+                    struct plate *current_plate = sushi_restaurant->plates;
+                    while (current_plate != NULL)
+                    {
+                        if (strcmp(current_plate->roll_name, dish_name) == 0)
+                        {
+                            // add plate to customer
+                            struct plate *new_plate = malloc(sizeof(struct plate));
+                            strcpy(new_plate->roll_name, dish_name);
+                            new_plate->colour = current_plate->colour;
+                            new_plate->type = current_plate->type;
+                            new_plate->next = current_table->orders;
+                            current_table->orders = new_plate;
+                            break;
+                        }
+                        current_plate = current_plate->next;
+                    }
+                    break;
+                    // if plate does not exist, print "NO SUCH PLATE" and ask user to add plate
+                    if (current_plate == NULL)
+                    {
+                        printf("NO SUCH PLATE :( \n");
+                        printf("Enter command to add plate: ");
+                    }
+                }
+                current_table = current_table->next;
+            }
+            // if customer does not exist, print "Customer does not exist"
+            if (current_table == NULL)
+            {
+                printf("Customer does not exist :( \n");
+            }
+        }
+        // calculate bill using COMMAND_CALCULATE_BILL
+        else if (command == COMMAND_CALCULATE_BILL)
+        {
+            //    prompt for customer name
+            printf("Enter customer name: ");
+            fgets(name, MAX_STRING_LENGTH, stdin);
+            remove_newline(name);
+            //    check if customer exists
+            struct table *current_table = sushi_restaurant->tables;
+            while (current_table != NULL)
+            {
+                if (strcmp(current_table->customer, name) == 0)
+                {
+                    // calculate bill
+                    int bill = 0;
+                    struct plate *current_plate = current_table->orders;
+                    while (current_plate != NULL)
+                    {
+                        bill += current_plate->type;
+                        current_plate = current_plate->next;
+                    }
+                    printf("Bill for %s is %d \n", name, bill);
+                    break;
+                }
+                current_table = current_table->next;
+            }
+
+            // if customer does not exist, print "Customer does not exist"
+            if (current_table == NULL)
+            {
+                printf("Customer does not exist :( \n");
+            }
+        }
+        // close restaurant using COMMAND_CLOSE_RESTAURANT/ clear all memory
+        else if (command == COMMAND_CLOSE_RESTAURANT)
+        {
+            // free all memory
+            struct table *current_table = sushi_restaurant->tables;
+            while (current_table != NULL)
+            {
+                struct table *next_table = current_table->next;
+                struct plate *current_plate = current_table->orders;
+                while (current_plate != NULL)
+                {
+                    struct plate *next_plate = current_plate->next;
+                    free(current_plate);
+                    current_plate = next_plate;
+                }
+                free(current_table);
+                current_table = next_table;
+            }
+            struct plate *current_plate = sushi_restaurant->plates;
+            while (current_plate != NULL)
+            {
+                struct plate *next_plate = current_plate->next;
+                free(current_plate);
+                current_plate = next_plate;
+            }
+            free(sushi_restaurant);
+            break;
+        }
+        // reverse train using COMMAND_REVERSE_TRAIN
+        else if (command == COMMAND_REVERSE_TRAIN)
+        {
+            // reverse train
+            struct plate *current_plate = sushi_restaurant->plates;
+            struct plate *previous_plate = NULL;
+            struct plate *next_plate = NULL;
+            while (current_plate != NULL)
+            {
+                next_plate = current_plate->next;
+                current_plate->next = previous_plate;
+                previous_plate = current_plate;
+                current_plate = next_plate;
+            }
+            sushi_restaurant->plates = previous_plate;
+        }
+        // if command is not valid, print "Invalid command"
+        else
+        {
+            printf("Invalid command :( \n");
+        }
+
+        // nw
         printf("Enter command: ");
     }
 
